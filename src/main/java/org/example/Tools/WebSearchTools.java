@@ -3,6 +3,7 @@ package org.example.Tools;
 import dev.langchain4j.agent.tool.Tool;
 
 import java.io.BufferedReader;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 
 import java.net.HttpURLConnection;
@@ -14,6 +15,8 @@ import java.util.Map;
 
 import dev.langchain4j.web.search.WebSearchTool;
 import dev.langchain4j.web.search.searchapi.SearchApiWebSearchEngine;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.text.PDFTextStripper;
 
 public class WebSearchTools {
 
@@ -61,6 +64,24 @@ public class WebSearchTools {
             return "获取网页内容失败: " + e.getMessage();
         }
         return content.toString();
+    }
+
+    @Tool(name = "recogonizePDF", value = "PDF 识别工具，在包含的连接当中含有PDF时可以调用此工具识别PDF当中的文本")
+    String recogonizePDF(String urlString) {
+        StringBuilder extractedText = new StringBuilder();
+        try (InputStream input = new URL(urlString).openStream();
+             PDDocument document = PDDocument.load(input)) {
+
+            PDFTextStripper stripper = new PDFTextStripper();
+            stripper.setSortByPosition(true); // 按页面顺序提取
+            String text = stripper.getText(document);
+            extractedText.append(text);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return "PDF 解析失败: " + e.getMessage();
+        }
+        return extractedText.toString().trim();
     }
 
 
