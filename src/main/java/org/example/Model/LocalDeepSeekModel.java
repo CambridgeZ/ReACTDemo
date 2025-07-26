@@ -29,24 +29,37 @@ public class LocalDeepSeekModel {
                 System.out.println("开始研究: " + query);
 
                 String promptFirstStep = """
-                        这是用户第一步传入的问题，请确定对于这个问题的研究方案
+                        你是一名深度研究助理，请基于以下用户问题制定一个详细的研究计划：
+                        - 明确需要查找的关键信息点
+                        - 给出具体的检索思路（可以包含关键字、潜在的数据源）
+                        - 不要直接回答问题，只输出计划步骤
+                         
+                        用户问题：
                         """;
 
                 String Answer = original.research(query);
                 int maxStep = 20;
                 for (int i = 0; i < maxStep; i++) {
                     String ReasonPrompt = """
-                            下面是之前大模型根据用户问题得到的结果，请根据结果进行进一步完善，设计新的检索和思考的方案
-                            如果其中有链接我希望你能够使用获取网页的工具去查看其中涉及的文档
+                             请根据以下已有研究计划和最新结果，进行推理：
+                             1. 分析是否还有未覆盖的重要信息点
+                             2. 设计新的检索方案（具体要检索什么、去哪里检索）
+                             3. 重点：如果结果中包含链接，请规划如何使用查看网页工具获取页面内容
+                             只输出你的新的检索方案和推理过程，不要直接回答用户问题。
+                             
+                             现有内容：
                             """;
                     Answer = original.research(ReasonPrompt + Answer);
                     String ActPrompt = """
-                            这是之前大模型设计的新的检索方案，请根据此方案整理并获取相关的信息，并形成回答
-                            在回答当中我希望你包含进去检索文档的链接
+                             请根据上一步生成的检索方案：
+                             - 执行信息整理和整合
+                             - 输出一个更完整的回答
+                             - 在回答中包含参考信息和检索到的原始链接
                             """;
                     Answer = original.research(ActPrompt + Answer);
                     String ObservePrompt = """
-                            这是之前得到的结果，请告诉我是否需要继续检索，你的回答只有两种"是" 或者 “不是”
+                            请只回答“是”或“不是”：
+                            当前结果是否足够完整，是否还需要继续检索？
                             """;
                     String isNeedContinue = original.research(ObservePrompt + Answer);
                     if(isNeedContinue.equals("不是")){
